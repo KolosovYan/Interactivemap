@@ -6,27 +6,29 @@ using UnityEngine;
 public class MapMarker : MonoBehaviour
 {
     public static event Action<MapMarker> OnMarkerSelected;
+    public static event Action<MapMarker> OnMarkerStartMove;
     public static event Action<MapMarker> OnMarkerInizialized;
 
-    public string Name {  get; private set; }
-    public string Position { get; private set; }
-    public string Description { get; private set; }
-    public string ImagePath { get; private set; }
+    public Sprite MarkerSprite {  get; private set; }
+
+    public Vector3 Position { get; private set; }
+
+    public MapMarkerInfo Info { get; private set; }
 
     private bool isCursorOnMarker = false;
     private bool mouseDown = false;
 
-    public void LoadMarker()
+    public void LoadMarker(MapMarkerInfo info)
     {
-        SetPosition(Vector3Converter.StringToVector3(Position));
+        Info = info;
+        SetPosition(info.GetPosition());
         SetSprite();
     }
 
     public void InizializeMarker(string name, string description, string imagePath)
     {
-        Name = name;
-        Description = description;
-        ImagePath = imagePath;
+        Info = new MapMarkerInfo();
+        Info.InizializeMarker(name, description, imagePath, Position);
         SetSprite();
         OnMarkerInizialized?.Invoke(this);
     }
@@ -35,7 +37,13 @@ public class MapMarker : MonoBehaviour
     {
         pos.z -= 0.1f;
         transform.position = pos;
-        Position = Vector3Converter.Vector3ToString(pos);
+        Position = pos;
+    }
+
+    public void UpdatePosition(Vector3 pos)
+    {
+        SetPosition(pos);
+        Info.UpdatePosition(Position);
     }
 
     public void DestroyMarker()
@@ -45,7 +53,7 @@ public class MapMarker : MonoBehaviour
 
     private void SetSprite()
     {
-        MarkerSprite = FilePicker.GetSpriteFromPath(ImagePath);
+        MarkerSprite = FilePicker.GetSpriteFromPath(Info.ImagePath);
     }
 
     private void OnMouseEnter()
@@ -66,8 +74,10 @@ public class MapMarker : MonoBehaviour
         float mouseDownTime = 0f;
         float delayTime = 0.7f;
         bool isDescriptionShowed = false;
+        bool canStartMoveMarker = true;
 
-        while (isCursorOnMarker && !isDescriptionShowed)
+        while (isCursorOnMarker && !isDescriptionShowed
+            && canStartMoveMarker)
         {
             if (!mouseDown)
             {
@@ -88,7 +98,8 @@ public class MapMarker : MonoBehaviour
 
                 if (mouseDownTime >= delayTime)
                 {
-                    //Move Mode;
+                    canStartMoveMarker = false;
+                    OnMarkerStartMove?.Invoke(this);
                 }
 
             }

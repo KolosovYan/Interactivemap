@@ -40,11 +40,11 @@ public class MarkerCreationWindow : MonoBehaviour
     {
         isEditingMode = true;
         lastMarker = marker;
-        nameInput.text = marker.Name;
-        descriptionInput.text = marker.Description;
+        nameInput.text = marker.Info.Name;
+        descriptionInput.text = marker.Info.Description;
         createButton.interactable = true;
         selectedImage.sprite = marker.MarkerSprite;
-        lastImagePath = marker.ImagePath;
+        lastImagePath = marker.Info.ImagePath;
         addImageButton.SetActive(false);
         deleteImageButton.SetActive(true);
         cashedGO.SetActive(true);
@@ -95,6 +95,12 @@ public class MarkerCreationWindow : MonoBehaviour
         tempMarker = isEditingMode ? lastMarker : MarkerCreationController.Instance.GetLastCreatedMarker();
 
         tempMarker.InizializeMarker(nameInput.text, descriptionInput.text, lastImagePath);
+    }
+
+    public void OnCloseButtonPressed()
+    {
+        if (!isEditingMode)
+            MarkerCreationController.Instance.DestroyLastMarker();
     }
 
     private void SetCreateButtonState(bool state) => createButton.interactable = state;

@@ -19,8 +19,8 @@ public class MarkerPopupInfo : MonoBehaviour
 
     public void ShowMarkerInfo(MapMarker marker)
     {
-        markerName.text = marker.Name;
-        markerDescription.text = LimitTextToTenWords(marker.Description);
+        markerName.text = marker.Info.Name;
+        markerDescription.text = LimitTextToTenWords(marker.Info.Description);
         markerImage.sprite = marker.MarkerSprite;
         lastSelected = marker;
         cashedGO.SetActive(true);

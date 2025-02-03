@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class MarkerInfoWindow : MonoBehaviour
 {
     public static event Action<MapMarker> OnEditPressed;
+    public static event Action<MapMarker> OnDeletePressed;
 
     [Header("Components")]
 
@@ -20,14 +21,16 @@ public class MarkerInfoWindow : MonoBehaviour
 
     public void ShowMarkerInfo(MapMarker marker)
     {
-        markerName.text = marker.Name;
-        markerDescription.text = marker.Description;
+        markerName.text = marker.Info.Name;
+        markerDescription.text = marker.Info.Description;
         markerImage.sprite = marker.MarkerSprite;
         lastMarker = marker;
         cashedGO.SetActive(true);
     }
 
     public void EditMarkerPressed() => OnEditPressed?.Invoke(lastMarker);
+
+    public void DeleteMarkerPressed() => OnDeletePressed?.Invoke(lastMarker);
 
     public bool IsWindowActive() { return cashedGO.activeSelf; }
 

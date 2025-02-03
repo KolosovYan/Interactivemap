@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private MarkerCreationWindow markerCreationWindow;
     [SerializeField] private GameObject markerAddMode;
     [SerializeField] private GameObject markerAddModeButton;
+    [SerializeField] private GameObject markerMoveMode;
     [SerializeField] private MarkerPopupInfo markerPopupInfo;
     [SerializeField] private MarkerInfoWindow markerInfo;
 
@@ -20,8 +21,8 @@ public class UIManager : MonoBehaviour
     {
         MapMarker.OnMarkerSelected += ShowPopupMarkerInfo;
         MarkerPopupInfo.OnShowInfoPressed += ShowFullMarkerInfo;
-        MapController.OnEnterCreationMode += EnableMarkerAddMode;
-        MapController.OnExitCreationMode += DisableMarkerAddMode;
+        MapController.OnCreationModeStateChange += SetMarkerAddMode;
+        MapController.OnMoveModeStateChange += SetMarkerMoveMode;
         MarkerCreationController.OnNewMarkerCreated += (m) => OpenMarkerCreationWindow(m);
         MarkerInfoWindow.OnEditPressed += (m) => OpenMarkerCreationWindow(m, true);
     }
@@ -43,16 +44,15 @@ public class UIManager : MonoBehaviour
         OnUIWindowOpened?.Invoke();
     }
 
-    private void EnableMarkerAddMode()
+    private void SetMarkerAddMode(bool state)
     {
-        markerAddMode.SetActive(true);
-        markerAddModeButton.SetActive(false);
+        markerAddMode.SetActive(state);
+        markerAddModeButton.SetActive(!state);
     }
 
-    private void DisableMarkerAddMode()
+    private void SetMarkerMoveMode(bool state)
     {
-        markerAddMode.SetActive(false);
-        markerAddModeButton.SetActive(true);
+        markerMoveMode.SetActive(state);
     }
 
     private void OpenMarkerCreationWindow(MapMarker m, bool editMode = false)

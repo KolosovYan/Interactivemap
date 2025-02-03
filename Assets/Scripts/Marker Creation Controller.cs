@@ -25,6 +25,13 @@ public class MarkerCreationController : MonoBehaviour
         lastCreated = marker;
     }
 
+    public MapMarker CreateMarkerFromInfo(MapMarkerInfo info)
+    {
+        MapMarker marker = Instantiate(prefab);
+        marker.LoadMarker(info);
+        return marker;
+    }
+
     public MapMarker GetLastCreatedMarker() { return lastCreated; }
 
     public void DestroyLastMarker() => lastCreated.DestroyMarker();

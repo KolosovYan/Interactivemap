@@ -5,15 +5,17 @@ using UnityEngine;
 
 public class MapController : MonoBehaviour
 {
-    public static event Action OnEnterCreationMode;
-    public static event Action OnExitCreationMode;
+    public static event Action<bool> OnCreationModeStateChange;
+    public static event Action<bool> OnMoveModeStateChange;
 
     [Header("Components")]
 
-    [SerializeField] private Map map;
+    [SerializeField] private MarkerCreationController markerCreationController;
     [SerializeField] private List<MapMarker> markers;
 
     private bool isMarkerCreationMode = false;
+    private bool isMarkerMoveMode = false;
+    private MapMarker movableMarker;
 
     public void SwitchCreationModeState()
     {
@@ -24,22 +26,70 @@ public class MapController : MonoBehaviour
             EnableCreationMode();
     }
 
-    public void OnSavePressed() => SaveController.SaveMarkers(markers);
+    public void EnableMarkerMoveMode(MapMarker m)
+    {
+        isMarkerMoveMode = true;
+        movableMarker = m;
+
+        if (isMarkerCreationMode)
+            DisableCreationMode();
+
+        Map.OnMapTouched += MoveMarker;
+        OnMoveModeStateChange?.Invoke(true);
+    }
+
+    public void DisableMarkerMoveMode()
+    {
+        Map.OnMapTouched -= MoveMarker;
+        movableMarker = null;
+        OnMoveModeStateChange?.Invoke(false);
+    }
+
+    private void MoveMarker()
+    {
+        if (movableMarker != null && !InputHandler.Instance.IsPointerOverUIObject())
+        {
+            movableMarker.UpdatePosition(InputHandler.Instance.GetClickPosition());
+            DisableMarkerMoveMode();
+        }
+    }
+
+    public void OnSavePressed()
+    {
+        List<MapMarkerInfo> markersInfo = new List<MapMarkerInfo>();
+
+        for (int i = 0; i < markers.Count; i++)
+        {
+            markersInfo.Add(markers[i].Info);
+        }
+
+        SaveController.SaveMarkers(markersInfo);
+    }
 
     private void Awake()
     {
         MapMarker.OnMarkerInizialized += AddMarkerToList;
+        MapMarker.OnMarkerStartMove += EnableMarkerMoveMode;
+        MarkerInfoWindow.OnDeletePressed += DeleteMarker;
         LoadMarkers();
     }
 
     private void LoadMarkers()
     {
-        markers = new List<MapMarker>(SaveController.LoadMarkers());
+        List<MapMarkerInfo> markersInfo = SaveController.LoadMarkers();
+        markers = new List<MapMarker>();
 
-        if (markers.Count > 0)
+        if (markersInfo != null)
         {
-            foreach (MapMarker marker in markers)
-                marker.LoadMarker();
+            if (markersInfo.Count > 0)
+            {
+                for (int i = 0; i < markersInfo.Count; i++)
+                {
+                    markersInfo[i].Log();
+                    MapMarker tempMarker = markerCreationController.CreateMarkerFromInfo(markersInfo[i]);
+                    markers.Add(tempMarker);
+                }
+            }
         }
     }
 
@@ -57,9 +107,12 @@ public class MapController : MonoBehaviour
 
     private void EnableCreationMode()
     {
+        if (isMarkerMoveMode)
+            DisableMarkerMoveMode();
+
         isMarkerCreationMode = true;
         Map.OnMapTouched += CreateNewMarker;
-        OnEnterCreationMode?.Invoke();
+        OnCreationModeStateChange?.Invoke(true);
     }
 
     private void CreateNewMarker()
@@ -72,6 +125,6 @@ public class MapController : MonoBehaviour
     {
         isMarkerCreationMode = false;
         Map.OnMapTouched -= CreateNewMarker;
-        OnExitCreationMode?.Invoke();
+        OnCreationModeStateChange?.Invoke(false);
     }
 }
